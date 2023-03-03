@@ -1,13 +1,14 @@
 import { Card, Button, Table } from "react-bootstrap";
 import {
   AddPostButton,
-  BodyContent,
   CardsContainer,
+  FilterButton,
+  FilterContainer,
   TitleContainer,
 } from "./styles";
 import React, { useState, useEffect } from "react";
 import axiosInstance from "../../api/axiosConfig";
-import { Trash, FadersHorizontal, Pen } from "phosphor-react";
+import { Trash, Pen, FunnelSimple } from "phosphor-react";
 import { Link } from "react-router-dom";
 import { EditConfigIcon } from "../PostsCreation/styles";
 
@@ -19,7 +20,6 @@ interface UserPosts {
 
 export function Home() {
   const [posts, setPosts] = useState<UserPosts[]>([]);
-  const [deleteItemId, setDeleteItemId] = useState<string>("");
   const [showIcons, setShowIcons] = useState<boolean>(false);
 
   const fetchData = async () => {
@@ -47,11 +47,6 @@ export function Home() {
     } catch (error) {
       console.error(error); // handle error here
     }
-  };
-
-  const updatePosts = (newPost: UserPosts) => {
-    setPosts(posts.map((post) => (post.id === newPost.id ? newPost : post)));
-    localStorage.setItem("posts", JSON.stringify(posts));
   };
 
   const handleEditConfigIconClick = () => {
@@ -84,7 +79,10 @@ export function Home() {
             <thead>
               <tr>
                 <th>#</th>
+                <FilterContainer>
                 <th>Post title</th>
+                <FilterButton size={25} />
+                </FilterContainer>
                 <th>Post body</th>
               </tr>
             </thead>

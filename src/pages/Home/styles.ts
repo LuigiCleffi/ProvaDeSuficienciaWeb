@@ -1,9 +1,25 @@
-import { PlusCircle } from 'phosphor-react';
+import { FunnelSimple, PlusCircle } from 'phosphor-react';
 import styled from 'styled-components';
 import { Container } from "react-bootstrap";
 
 export const CardsContainer = styled(Container)`
     margin-top: 2rem;
+`
+
+export const FilterContainer = styled.div`
+    display: flex;
+    gap: 15px;
+`
+export const FilterButton = styled(FunnelSimple)`
+    background-color: #706B57;
+    color: white;
+    padding:3px;
+    cursor: pointer;
+    border-radius: 3px;
+    &:hover{
+        transition: background-color 0.2s;
+        background-color: #BDB3A0;
+    }
 `
 export const AddPostButton = styled(PlusCircle)`
     background-color: #2F58CD;

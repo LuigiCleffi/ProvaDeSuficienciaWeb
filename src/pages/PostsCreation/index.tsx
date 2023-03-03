@@ -5,51 +5,62 @@ import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../api/axiosConfig";
 
 interface Post {
-  id?:number
+  id: number;
   title: string;
   body: string;
 }
 
 export function PostsCreation() {
   const [validated, setValidated] = useState(false);
-  const [post, setPost] = useState<Post>({ title: "", body: "" });
+  const [post, setPost] = useState<Post>({ id: 0, title: "", body: "" });
+  const [posts, setPosts] = useState<Post[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const storedPost = localStorage.getItem("post");
-    if (storedPost) {
-      setPost(JSON.parse(storedPost));
+    const storedPosts = localStorage.getItem("posts");
+    if (storedPosts) {
+      setPosts(JSON.parse(storedPosts));
     }
   }, []);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
-    event.stopPropagation();
-    const form = event.currentTarget;
-    if (form.checkValidity() === false) {
-      setValidated(true);
-      return;
-    }
-    setValidated(true);
+    const { title, body } = post;
+    const newPost: Post = { id: post.id, title, body };
+
     try {
-      const response = await axiosInstance.post("posts", {
-        title: post.title,
-        body: post.body,
-      });
-      console.log(response.data);
-      localStorage.setItem("post", JSON.stringify(post));      
-      navigate("/home");
-      setPost({title: "", body: ""})
+      const response = await axiosInstance.post<Post>('posts', newPost);
+      const { data } = response;
+      // Store data locally
+      const highestId = posts.reduce((acc, curr) => curr.id > acc ? curr.id : acc, 0);
+      const updatedPost = { ...data, id: highestId + 1 };
+      const storedPosts = localStorage.getItem('posts');
+      if (storedPosts) {
+        const posts = JSON.parse(storedPosts) as Post[];
+        localStorage.setItem('posts', JSON.stringify([updatedPost, ...posts]));
+        setPosts([updatedPost, ...posts]);
+      } else {
+        localStorage.setItem('posts', JSON.stringify([updatedPost]));
+        setPosts([updatedPost]);
+      }
+      // Navigate to home page
+      navigate('/home');
     } catch (error) {
       console.error(error);
     }
   };
-
+  
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setPost({ ...post, [name]: value });
   };
 
+  useEffect(() => {
+    if (posts.length > 0) {
+      const maxId = Math.max(...posts.map(post => post.id));
+      setPost({ ...post, id: maxId + 1 });
+    }
+  }, [posts]);
   return (
     <ContainerForm>
       <CardContainer>
