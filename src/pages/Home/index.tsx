@@ -2,13 +2,11 @@ import { Card, Button, Table } from "react-bootstrap";
 import {
   AddPostButton,
   CardsContainer,
-  FilterButton,
-  FilterContainer,
   TitleContainer,
 } from "./styles";
 import React, { useState, useEffect } from "react";
 import axiosInstance from "../../api/axiosConfig";
-import { Trash, Pen, FunnelSimple } from "phosphor-react";
+import { Trash, Pen } from "phosphor-react";
 import { Link } from "react-router-dom";
 import { EditConfigIcon } from "../PostsCreation/styles";
 
@@ -20,48 +18,56 @@ interface UserPosts {
 
 export function Home() {
   const [posts, setPosts] = useState<UserPosts[]>([]);
-  const [showIcons, setShowIcons] = useState<boolean>(false);
+  const [isEditIconShown, setIsEditIconShown] = useState<boolean>(false);
 
-  const fetchData = async () => {
+  const fetchData = async (): Promise<void>  => {
     const response = await axiosInstance.get<UserPosts[]>("posts");
     const data = response.data;
-    setPosts(data);
     localStorage.setItem("posts", JSON.stringify(data));
-  };
+    setPosts(data);
+  }
 
-  const deleteItem = async (itemId: number): Promise<void> => {
+  const deletePost = async (postId: number): Promise<void> => {
     try {
-      await axiosInstance.delete(`posts/${itemId}`);
-      console.log(`Item ${itemId} deleted successfully`);
-      setPosts(posts.filter((post) => post.id !== itemId));
-      localStorage.setItem("posts", JSON.stringify(posts.filter((post) => post.id !== itemId)));
+      await axiosInstance.delete(`posts/${postId}`);
+      setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
+      localStorage.setItem(
+        "posts",
+        JSON.stringify(posts.filter((post) => post.id !== postId))
+      );
     } catch (error) {
       console.error(error);
     }
   };
 
-  const handleDeleteButtonClick = async (itemId: number) => {
+  const handleDeleteButtonClick = async (postId: number) => {
     try {
-      await deleteItem(itemId);
-      console.log("Item deleted successfully");
+      await deletePost(postId);
     } catch (error) {
-      console.error(error); // handle error here
+      console.error(error);
     }
   };
 
   const handleEditConfigIconClick = () => {
-    setShowIcons(!showIcons);
+    setIsEditIconShown(!isEditIconShown);
   };
 
   useEffect(() => {
-    const savedPosts = localStorage.getItem("posts");
-    if (savedPosts) {
-      setPosts(JSON.parse(savedPosts));
-    } else {
-      fetchData();
-    }
-  }, []);
+      try {
+        fetchData()
+      } catch (error) {
+        console.error(error);
+      }
 
+    // Get data from local storage
+    const localData = localStorage.getItem("posts");
+    if (localData) {
+      setPosts(JSON.parse(localData));
+    }
+
+    fetchData();
+  }, []);
+  
   return (
     <CardsContainer>
       <Card>
@@ -79,10 +85,7 @@ export function Home() {
             <thead>
               <tr>
                 <th>#</th>
-                <FilterContainer>
                 <th>Post title</th>
-                <FilterButton size={25} />
-                </FilterContainer>
                 <th>Post body</th>
               </tr>
             </thead>
@@ -97,7 +100,7 @@ export function Home() {
                     </tr>
                     <tr>
                       <td colSpan={3}>
-                        {showIcons && (
+                        {isEditIconShown && (
                           <>
                             <Button
                               variant="danger"
